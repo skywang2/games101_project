@@ -4,6 +4,8 @@
 #include "rasterizer.hpp"
 #include "global.hpp"
 #include "Triangle.hpp"
+using std::cout;
+using std::endl;
 
 constexpr double MY_PI = 3.1415926;
 
@@ -32,6 +34,32 @@ Eigen::Matrix4f get_projection_matrix(float eye_fov, float aspect_ratio, float z
 {
     // TODO: Copy-paste your implementation from the previous assignment.
     Eigen::Matrix4f projection;
+    float FOVY_2 = (eye_fov / 2) * MY_PI / 180;
+    float t = tan(FOVY_2) * fabs(zNear);
+    float b = -t;
+    float r = t * aspect_ratio;
+    float l = -r;
+    float n = zNear, f = zFar;
+    Eigen::Matrix4f perspective;
+    Eigen::Matrix4f translate, rotate;
+    //Eigen::Matrix4f orthographic = Eigen::Matrix4f::Identity();
+
+    perspective <<  n,  0,  0,  0,
+                    0,  n,  0,  0,
+                    0,  0,  n+f, -n*f,
+                    0,  0,  1,  0;
+
+    rotate <<   2/(r-l),  0,  0,  0,
+                0,  2/(t-b),  0,  0,
+                0,  0,  2/(n-f),  0,
+                0,  0,  0,  1;
+
+    translate <<    1,  0,  0,  -(r+l)/2,
+                    0,  1,  0,  -(t+b)/2,
+                    0,  0,  1,  -(n+f)/2,
+                    0,  0,  0,  1;
+    //projection = orthographic * (perspective to orthographic) * projection;
+    projection = (translate * rotate) * perspective * projection;
 
     return projection;
 }
@@ -104,6 +132,11 @@ int main(int argc, const char** argv)
         return 0;
     }
 
+    //test Eigen
+    // Vector3f u(1,2,3);
+    // Vector3f v(0,1,2);
+    // cout << "w:" << u.cross(v) << endl;
+
     while(key != 27)
     {
         r.clear(rst::Buffers::Color | rst::Buffers::Depth);
@@ -111,7 +144,7 @@ int main(int argc, const char** argv)
         r.set_model(get_model_matrix(angle));
         r.set_view(get_view_matrix(eye_pos));
         r.set_projection(get_projection_matrix(45, 1, 0.1, 50));
-
+        //cout << "pos_id:" << pos_id.pos_id << " ind_id:" << ind_id.ind_id << " col_id:" << col_id.col_id << endl;
         r.draw(pos_id, ind_id, col_id, rst::Primitive::Triangle);
 
         cv::Mat image(700, 700, CV_32FC3, r.frame_buffer().data());
