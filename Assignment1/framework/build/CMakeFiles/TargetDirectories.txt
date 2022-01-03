@@ -1,3 +1,0 @@
-/home/cs18/Desktop/作业1Assignment1/framework/build/CMakeFiles/rebuild_cache.dir
-/home/cs18/Desktop/作业1Assignment1/framework/build/CMakeFiles/Rasterizer.dir
-/home/cs18/Desktop/作业1Assignment1/framework/build/CMakeFiles/edit_cache.dir
