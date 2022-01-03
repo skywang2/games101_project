@@ -1,2 +1,2 @@
 # games101_project
-games101课程练习
+1. games101课程练习
