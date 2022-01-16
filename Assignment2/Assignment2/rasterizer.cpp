@@ -136,8 +136,8 @@ void rst::rasterizer::rasterize_triangle(const Triangle& t) {
     // cout << "top:" << v_max << " button:" << v_min << " left:" << h_min << " right:" << h_max << endl;
     
     for(int i = h_min; i < h_max; ++i)
+    {
         for(int j = v_min; j < v_max; ++j)
-        {
             if(insideTriangle(i+0.5, j+0.5, t.v))
             {
                 // If so, use the following code to get the interpolated z value.
@@ -155,7 +155,7 @@ void rst::rasterizer::rasterize_triangle(const Triangle& t) {
                     set_pixel(Vector3f(i, j, 1.0), t.getColor());
                 }
             }
-        }//for
+    }//for,i
 }
 
 void rst::rasterizer::set_model(const Eigen::Matrix4f& m)
