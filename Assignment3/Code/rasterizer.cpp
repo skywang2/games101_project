@@ -280,7 +280,7 @@ void rst::rasterizer::rasterize_triangle(const Triangle& t, const std::array<Eig
     // Use: Instead of passing the triangle's color directly to the frame buffer, pass the color to the shaders first to get the final color;
     // Use: auto pixel_color = fragment_shader(payload);
 
- 
+
 }
 
 void rst::rasterizer::set_model(const Eigen::Matrix4f& m)
@@ -310,12 +310,12 @@ void rst::rasterizer::clear(rst::Buffers buff)
     }
 }
 
-rst::rasterizer::rasterizer(int w, int h) : width(w), height(h)
+rst::rasterizer::rasterizer(int w, int h) : width(w), height(h), texture("")
 {
     frame_buf.resize(w * h);
     depth_buf.resize(w * h);
 
-    texture = std::nullopt;
+    //texture = Texture("");// texture need initualize
 }
 
 int rst::rasterizer::get_index(int x, int y)

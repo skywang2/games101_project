@@ -14,6 +14,7 @@ private:
 public:
     Texture(const std::string& name)
     {
+        //if(0 == name.size()) return;
         image_data = cv::imread(name);
         cv::cvtColor(image_data, image_data, cv::COLOR_RGB2BGR);
         width = image_data.cols;
