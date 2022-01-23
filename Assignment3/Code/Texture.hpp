@@ -5,6 +5,7 @@
 #ifndef RASTERIZER_TEXTURE_H
 #define RASTERIZER_TEXTURE_H
 #include "global.hpp"
+#include <iostream>
 #include <eigen3/Eigen/Eigen>
 #include <opencv2/opencv.hpp>
 class Texture{
@@ -15,6 +16,7 @@ public:
     Texture(const std::string& name)
     {
         //if(0 == name.size()) return;
+        std::cout << "Texture path:" << name << std::endl;
         image_data = cv::imread(name);
         cv::cvtColor(image_data, image_data, cv::COLOR_RGB2BGR);
         width = image_data.cols;

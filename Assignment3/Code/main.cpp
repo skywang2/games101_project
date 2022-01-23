@@ -50,7 +50,35 @@ Eigen::Matrix4f get_model_matrix(float angle)
 Eigen::Matrix4f get_projection_matrix(float eye_fov, float aspect_ratio, float zNear, float zFar)
 {
     // TODO: Use the same projection matrix from the previous assignments
+    Eigen::Matrix4f projection;
+    float FOVY_2 = (eye_fov / 2) * MY_PI / 180;
+    float t = tan(FOVY_2) * fabs(zNear);
+    float b = -t;
+    float r = t * aspect_ratio;
+    float l = -r;
+    float n = zNear, f = zFar;
+    Eigen::Matrix4f perspective;
+    Eigen::Matrix4f translate, scale;
+    //Eigen::Matrix4f orthographic = Eigen::Matrix4f::Identity();
 
+    perspective <<  n,  0,  0,  0,
+                    0,  n,  0,  0,
+                    0,  0,  n+f, -n*f,
+                    0,  0,  1,  0;
+
+    scale <<   2/(r-l),  0,  0,  0,
+                0,  2/(t-b),  0,  0,
+                0,  0,  2/(n-f),  0,
+                0,  0,  0,  1;
+
+    translate <<    1,  0,  0,  -(r+l)/2,
+                    0,  1,  0,  -(t+b)/2,
+                    0,  0,  1,  -(n+f)/2,
+                    0,  0,  0,  1;
+    //projection = orthographic * (perspective to orthographic) * projection;
+    projection = (scale * translate) * perspective * projection;
+
+    return projection;
 }
 
 Eigen::Vector3f vertex_shader(const vertex_shader_payload& payload)
@@ -250,7 +278,9 @@ int main(int argc, const char** argv)
     std::string obj_path = "../models/spot/";
 
     // Load .obj File
+    std::cout << "before load obj" << std::endl;
     bool loadout = Loader.LoadFile("../models/spot/spot_triangulated_good.obj");
+    std::cout << "after load obj" << std::endl;
     for(auto mesh:Loader.LoadedMeshes)
     {
         for(int i=0;i<mesh.Vertices.size();i+=3)
@@ -269,6 +299,8 @@ int main(int argc, const char** argv)
     rst::rasterizer r(700, 700);
 
     auto texture_path = "hmap.jpg";//wen li
+    std::cout << "init path:" << obj_path + texture_path << std::endl;
+
     r.set_texture(Texture(obj_path + texture_path));
 
     std::function<Eigen::Vector3f(fragment_shader_payload)> active_shader = phong_fragment_shader;
@@ -320,7 +352,7 @@ int main(int argc, const char** argv)
         r.clear(rst::Buffers::Color | rst::Buffers::Depth);
         r.set_model(get_model_matrix(angle));
         r.set_view(get_view_matrix(eye_pos));
-        r.set_projection(get_projection_matrix(45.0, 1, 0.1, 50));
+        r.set_projection(get_projection_matrix(45.0, 1, 0.1, 50));//mvp
 
         r.draw(TriangleList);
         cv::Mat image(700, 700, CV_32FC3, r.frame_buffer().data());
