@@ -293,8 +293,30 @@ void rst::rasterizer::rasterize_triangle(const Triangle& t, const std::array<Eig
                 if(abs(zp) < depth_buf[ind])
                 {
                     depth_buf[ind] = zp;
-                    std::cout << "z:" << zp << std::endl;
-                    set_pixel(Vector2i(i, j), Vector3f(100, 150, 100));
+                    
+                    //interpolated_color
+                    Vector3f interpolated_color = interpolate(alpha, beta, gamma, t.color[0], t.color[1], t.color[2], 1.0);
+
+                    //interpolated_normal
+                    Vector3f interpolated_normal = interpolate(alpha, beta, gamma, t.normal[0], t.normal[1], t.normal[2], 1.0);
+
+                    //interpolated_texcoords
+                    Vector2f interpolated_texcoords = interpolate(alpha, beta, gamma, t.tex_coords[0], t.tex_coords[1], t.tex_coords[2], 1.0);
+
+                    //interpolated_shadingcoords
+                    Vector3f interpolated_shadingcoords = interpolate(alpha, beta, gamma, view_pos[0], view_pos[1], view_pos[2], 1.0);
+                    
+                    fragment_shader_payload payload( interpolated_color, \
+                        interpolated_normal.normalized(), \
+                        interpolated_texcoords, \
+                        texture ? &*texture : nullptr);
+                    payload.view_pos = interpolated_shadingcoords;
+                    auto pixel_color = fragment_shader(payload);
+
+                    if(pixel_color.x()<3.0 && pixel_color.y()<3.0 && pixel_color.z()<3.0 ) 
+                        std::cout << "interpolated_color:\n" << pixel_color << std::endl;
+
+                    set_pixel(Vector2i(i, j), pixel_color);
                 }
             }
     }//for,i
