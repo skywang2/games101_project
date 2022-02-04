@@ -138,7 +138,18 @@ void rst::rasterizer::rasterize_triangle(const Triangle& t) {
     for(int i = h_min; i < h_max; ++i)
     {
         for(int j = v_min; j < v_max; ++j)
-            if(insideTriangle(i+0.5, j+0.5, t.v))
+        {
+            //MSAA-1
+            int a = insideTriangle(i+0.25, j+0.25, t.v);
+            int b = insideTriangle(i+0.75, j+0.25, t.v);
+            int c = insideTriangle(i+0.25, j+0.75, t.v);
+            int d = insideTriangle(i+0.75, j+0.75, t.v);
+            float percent = 0.25*(a + b + c + d);
+            
+            //normal
+            //if(insideTriangle(i+0.5, j+0.5, t.v))
+            //MSAA-2
+            if(a || b || c || d)
             {
                 // If so, use the following code to get the interpolated z value.
                 float alpha, beta, gamma;
@@ -152,9 +163,11 @@ void rst::rasterizer::rasterize_triangle(const Triangle& t) {
                 if(abs(z_interpolated) < depth_buf[ind])
                 {
                     depth_buf[ind] = z_interpolated;
-                    set_pixel(Vector3f(i, j, 1.0), t.getColor());
+                    //set_pixel(Vector3f(i, j, 1.0), t.getColor());
+                    set_pixel(Vector3f(i, j, 1.0), percent * t.getColor());
                 }
             }
+        }//for,j
     }//for,i
 }
 
