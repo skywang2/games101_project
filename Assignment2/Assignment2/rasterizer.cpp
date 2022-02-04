@@ -135,36 +135,64 @@ void rst::rasterizer::rasterize_triangle(const Triangle& t) {
     }
     // cout << "top:" << v_max << " button:" << v_min << " left:" << h_min << " right:" << h_max << endl;
     
+    std::vector<Eigen::Vector2f> pos{
+        {0.25, 0.25},
+        {0.75, 0.25},
+        {0.25, 0.75},
+        {0.75, 0.75}
+    };
     for(int i = h_min; i < h_max; ++i)
     {
         for(int j = v_min; j < v_max; ++j)
         {
-            //MSAA-1
-            int a = insideTriangle(i+0.25, j+0.25, t.v);
-            int b = insideTriangle(i+0.75, j+0.25, t.v);
-            int c = insideTriangle(i+0.25, j+0.75, t.v);
-            int d = insideTriangle(i+0.75, j+0.75, t.v);
-            float percent = 0.25*(a + b + c + d);
-            
-            //normal
-            //if(insideTriangle(i+0.5, j+0.5, t.v))
-            //MSAA-2
-            if(a || b || c || d)
+            if(!isMSAA)
             {
-                // If so, use the following code to get the interpolated z value.
-                float alpha, beta, gamma;
-                tie(alpha, beta, gamma) = computeBarycentric2D(i, j, t.v);
-                float w_reciprocal = 1.0/(alpha / v[0].w() + beta / v[1].w() + gamma / v[2].w());
-                float z_interpolated = alpha * v[0].z() / v[0].w() + beta * v[1].z() / v[1].w() + gamma * v[2].z() / v[2].w();
-                z_interpolated *= w_reciprocal;
-                // TODO : set the current pixel (use the set_pixel function) to the color of \
-                the triangle (use getColor function) if it should be painted.
-                auto ind = get_index(i, j);
-                if(abs(z_interpolated) < depth_buf[ind])
+                //normal
+                if(insideTriangle(i+0.5, j+0.5, t.v))
                 {
-                    depth_buf[ind] = z_interpolated;
-                    //set_pixel(Vector3f(i, j, 1.0), t.getColor());
-                    set_pixel(Vector3f(i, j, 1.0), percent * t.getColor());
+                    // If so, use the following code to get the interpolated z value.
+                    float alpha, beta, gamma;
+                    tie(alpha, beta, gamma) = computeBarycentric2D(i, j, t.v);
+                    float w_reciprocal = 1.0/(alpha / v[0].w() + beta / v[1].w() + gamma / v[2].w());
+                    float z_interpolated = alpha * v[0].z() / v[0].w() + beta * v[1].z() / v[1].w() + gamma * v[2].z() / v[2].w();
+                    z_interpolated *= w_reciprocal;
+                    // TODO : set the current pixel (use the set_pixel function) to the color of \
+                    the triangle (use getColor function) if it should be painted.
+                    auto ind = get_index(i, j);
+                    if(abs(z_interpolated) < depth_buf[ind])
+                    {
+                        depth_buf[ind] = z_interpolated;
+                        set_pixel(Vector3f(i, j, 1.0), t.getColor());
+                    }
+                }
+            }
+            else
+            {
+                //MSAA
+                int inTCount = 0;
+                float minDepth = FLT_MAX;
+                for(int k = 0;k < 4; ++k)
+                {
+                    if(insideTriangle(i+pos[k][0], j+pos[k][1], t.v))
+                    {
+                        float alpha, beta, gamma;
+                        tie(alpha, beta, gamma) = computeBarycentric2D(i+pos[k][0], j+pos[k][1], t.v);
+                        float w_reciprocal = 1.0/(alpha / v[0].w() + beta / v[1].w() + gamma / v[2].w());
+                        float z_interpolated = alpha * v[0].z() / v[0].w() + beta * v[1].z() / v[1].w() + gamma * v[2].z() / v[2].w();
+                        z_interpolated *= w_reciprocal;
+                        minDepth = std::min(z_interpolated, minDepth);
+                        inTCount++;
+                    }
+                }
+                if(inTCount > 0)
+                {
+                    auto ind = get_index(i, j);
+                    if(minDepth < depth_buf[ind])
+                    {
+                        depth_buf[ind] = minDepth;
+                        float percent = inTCount/4.0;
+                        set_pixel(Vector3f(i, j, 1.0), percent * t.getColor() /*+ (1 - percent) * frame_buf[ind]*/);
+                    }
                 }
             }
         }//for,j
@@ -198,7 +226,7 @@ void rst::rasterizer::clear(rst::Buffers buff)
     }
 }
 
-rst::rasterizer::rasterizer(int w, int h) : width(w), height(h)
+rst::rasterizer::rasterizer(int w, int h) : width(w), height(h), isMSAA(false)
 {
     frame_buf.resize(w * h);
     depth_buf.resize(w * h);

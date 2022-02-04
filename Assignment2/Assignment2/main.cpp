@@ -70,13 +70,16 @@ int main(int argc, const char** argv)
     bool command_line = false;
     std::string filename = "output.png";
 
-    if (argc == 2)
+    if (argc >= 2)
     {
         command_line = true;
         filename = std::string(argv[1]);
     }
-
     rst::rasterizer r(700, 700);
+    if (argc >= 3)
+    {
+        if(std::string(argv[2]) == "MSAA"){r.isMSAA = true;}
+    }
 
     Eigen::Vector3f eye_pos = {0,0,5};
 
