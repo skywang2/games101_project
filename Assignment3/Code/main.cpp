@@ -146,6 +146,7 @@ Eigen::Vector3f texture_fragment_shader(const fragment_shader_payload& payload)
     return result_color * 255.f;
 }
 
+//Blinn-Phong 模型
 Eigen::Vector3f phong_fragment_shader(const fragment_shader_payload& payload)
 {
     Eigen::Vector3f ka = Eigen::Vector3f(0.005, 0.005, 0.005);
@@ -170,7 +171,19 @@ Eigen::Vector3f phong_fragment_shader(const fragment_shader_payload& payload)
     {
         // TODO: For each light source in the code, calculate what the *ambient*, *diffuse*, and *specular* 
         // components are. Then, accumulate that result on the *result_color* object.
-        
+
+        Eigen::Vector3f v3f_light = light.position - point;
+        Eigen::Vector3f v3f_eye = eye_pos - point;
+        float r2 = light.position.squaredNorm();
+        //diffuse
+        float receivedRate = normal.normalized().dot(light.position.normalized());
+        result_color += kd.cwiseProduct((light.intensity/r2) * std::max(0.0f, receivedRate));
+        //specular
+        Eigen::Vector3f h = (v3f_light + v3f_eye).normalized();//bisector
+        float eyeReceivedRate = normal.normalized().dot(h);        
+        result_color += ks.cwiseProduct((light.intensity/r2) * std::pow(std::max(0.0f, eyeReceivedRate), p));
+        //ambient
+        result_color += ka.cwiseProduct(amb_light_intensity);
     }
 
     return result_color * 255.f;
@@ -299,7 +312,7 @@ int main(int argc, const char** argv)
     rst::rasterizer r(700, 700);
 
     auto texture_path = "hmap.jpg";//wen li
-    std::cout << "init path:" << obj_path + texture_path << std::endl;
+    std::cout << "Texture path:" << obj_path + texture_path << std::endl;
 
     r.set_texture(Texture(obj_path + texture_path));
 
