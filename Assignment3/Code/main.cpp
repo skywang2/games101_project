@@ -276,17 +276,41 @@ Eigen::Vector3f bump_fragment_shader(const fragment_shader_payload& payload)
 
     // TODO: Implement bump mapping here
     // Let n = normal = (x, y, z)
+    Eigen::Vector3f n = normal;
+    float x = n.x(), y = n.y(), z = n.z();
     // Vector t = (x*y/sqrt(x*x+z*z),sqrt(x*x+z*z),z*y/sqrt(x*x+z*z))
+    Eigen::Vector3f t = {x*y/sqrt(x*x+z*z), sqrt(x*x+z*z), z*y/sqrt(x*x+z*z)};
     // Vector b = n cross product t
+    Eigen::Vector3f b = n.cross(t);
     // Matrix TBN = [t b n]
+    Eigen::Matrix3f TBN;
+    TBN << t.x(), b.x(), n.x(), t.y(), b.y(), n.y(), t.z(), b.z(), n.z();
     // dU = kh * kn * (h(u+1/w,v)-h(u,v))
+    float dU = kh * kn * (h(u+1/w,v)-h(u,v));
     // dV = kh * kn * (h(u,v+1/h)-h(u,v))
+    float dV = kh * kn * (h(u,v+1/h)-h(u,v));
     // Vector ln = (-dU, -dV, 1)
     // Normal n = normalize(TBN * ln)
 
 
     Eigen::Vector3f result_color = {0, 0, 0};
-    result_color = normal;
+    result_color = n;
+
+    for (auto& light : lights)
+    {
+        Eigen::Vector3f v3f_light = light.position - point;
+        Eigen::Vector3f v3f_eye = eye_pos - point;
+        float r2 = light.position.squaredNorm();
+        //diffuse
+        float receivedRate = normal.normalized().dot(light.position.normalized());
+        result_color += kd.cwiseProduct((light.intensity/r2) * std::max(0.0f, receivedRate));
+        //specular
+        Eigen::Vector3f h = (v3f_light + v3f_eye).normalized();//bisector
+        float eyeReceivedRate = normal.normalized().dot(h);        
+        result_color += ks.cwiseProduct((light.intensity/r2) * std::pow(std::max(0.0f, eyeReceivedRate), p));
+        //ambient
+        result_color += ka.cwiseProduct(amb_light_intensity);
+    }
 
     return result_color * 255.f;
 }
