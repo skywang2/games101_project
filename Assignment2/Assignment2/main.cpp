@@ -70,13 +70,16 @@ int main(int argc, const char** argv)
     bool command_line = false;
     std::string filename = "output.png";
 
-    if (argc == 2)
+    if (argc >= 2)
     {
         command_line = true;
         filename = std::string(argv[1]);
     }
-
     rst::rasterizer r(700, 700);
+    if (argc >= 3)
+    {
+        if(std::string(argv[2]) == "MSAA"){r.isMSAA = true;}
+    }
 
     Eigen::Vector3f eye_pos = {0,0,5};
 
@@ -120,7 +123,7 @@ int main(int argc, const char** argv)
 
         r.set_model(get_model_matrix(angle));
         r.set_view(get_view_matrix(eye_pos));
-        r.set_projection(get_projection_matrix(45, 1, 0.1, 50));
+        r.set_projection(get_projection_matrix(45, 1, -0.1, -50));
 
         r.draw(pos_id, ind_id, col_id, rst::Primitive::Triangle);
         cv::Mat image(700, 700, CV_32FC3, r.frame_buffer().data());
