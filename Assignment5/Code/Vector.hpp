@@ -85,7 +85,11 @@ public:
     {
         return Vector2f(x + v.x, y + v.y);
     }
-    float x, y;
+    friend std::ostream& operator<<(std::ostream& os, const Vector2f& v)
+    {
+        return os << v.x << ", " << v.y;
+    }
+float x, y;
 };
 
 inline Vector3f lerp(const Vector3f& a, const Vector3f& b, const float& t)

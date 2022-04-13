@@ -1,7 +1,8 @@
 #pragma once
 
 #include "Object.hpp"
-
+#include <limits>
+#include <iostream>
 #include <cstring>
 
 bool rayTriangleIntersect(const Vector3f& v0, const Vector3f& v1, const Vector3f& v2, const Vector3f& orig,
@@ -33,7 +34,7 @@ bool rayTriangleIntersect(const Vector3f& v0, const Vector3f& v1, const Vector3f
     u = tuv.y;
     v = tuv.z;
     
-    return (tnear > 0 && 0 <= u && 0 <= v && 0 < (1 - u - v)) ? true : false;
+    return (0 <= tnear && 0 <= u && 0 <= v && -__FLT_EPSILON__ <= (1 - u - v)) ? true : false;
     // return false;
 }
 
@@ -43,17 +44,28 @@ public:
     MeshTriangle(const Vector3f* verts, const uint32_t* vertsIndex, const uint32_t& numTris, const Vector2f* st)
     {
         uint32_t maxIndex = 0;
+        
         for (uint32_t i = 0; i < numTris * 3; ++i)
             if (vertsIndex[i] > maxIndex)
                 maxIndex = vertsIndex[i];
         maxIndex += 1;
+        std::cout << "maxIndex:" << maxIndex << std::endl;
         vertices = std::unique_ptr<Vector3f[]>(new Vector3f[maxIndex]);
         memcpy(vertices.get(), verts, sizeof(Vector3f) * maxIndex);
+        for(int i = 0; i < (int)maxIndex; ++i)
+            std::cout << vertices.get()[i] << std::endl;
+
         vertexIndex = std::unique_ptr<uint32_t[]>(new uint32_t[numTris * 3]);
         memcpy(vertexIndex.get(), vertsIndex, sizeof(uint32_t) * numTris * 3);
+        for(int i = 0; i < (int)numTris * 3; ++i)
+            std::cout << vertexIndex.get()[i] << std::endl;
+
         numTriangles = numTris;
+        std::cout << "numTriangles:" << numTriangles << std::endl;
         stCoordinates = std::unique_ptr<Vector2f[]>(new Vector2f[maxIndex]);
         memcpy(stCoordinates.get(), st, sizeof(Vector2f) * maxIndex);
+        for(int i = 0; i < (int)maxIndex; ++i)
+            std::cout << stCoordinates.get()[i] << std::endl;
     }
 
     bool intersect(const Vector3f& orig, const Vector3f& dir, float& tnear, uint32_t& index,
@@ -91,7 +103,7 @@ public:
         const Vector2f& st0 = stCoordinates[vertexIndex[index * 3]];
         const Vector2f& st1 = stCoordinates[vertexIndex[index * 3 + 1]];
         const Vector2f& st2 = stCoordinates[vertexIndex[index * 3 + 2]];
-        st = st0 * (1 - uv.x - uv.y) + st1 * uv.x + st2 * uv.y;
+        st = st0 * (1 - uv.x - uv.y) + st1 * uv.x + st2 * uv.y;// zhong xin
     }
 
     Vector3f evalDiffuseColor(const Vector2f& st) const override
