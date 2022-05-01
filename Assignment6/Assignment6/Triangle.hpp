@@ -234,7 +234,7 @@ inline Intersection Triangle::getIntersection(Ray ray)
 
     // TODO find ray triangle intersection
     //std::cout << "11111" << std::endl;
-    if(0 <= t_tmp && 0 <= u && 0 <= v && EPSILON <= (1.0 - u - v))
+    if(0 <= t_tmp && 0 <= u && 0 <= v && std::numeric_limits<float>::min() <= (1.0 - u - v))
     {
         inter.happened = true;
         inter.coords = ray(t_tmp);//(1.0 - u - v) * v0 + u * v1 + v * v2;

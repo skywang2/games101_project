@@ -104,29 +104,32 @@ inline bool Bounds3::IntersectP(const Ray& ray, const Vector3f& invDir,
     float tyExit = (pMax.y - ray.origin.y) * invDir.y;
     float tzExit = (pMax.z - ray.origin.z) * invDir.z;
     
-    // if(!dirIsNeg[0])
-    // {
-    //     std::swap(txEnter, txExit);
-    // }
-    // if(!dirIsNeg[1])
-    // {
-    //     std::swap(tyEnter, tyExit);
-    // }
-    // if(!dirIsNeg[2])
-    // {
-    //     std::swap(tzEnter, tzExit);
-    // }
+    if(!dirIsNeg[0])
+    {
+        // std::cout << "swap x" << std::endl;
+        std::swap(txEnter, txExit);
+    }
+    if(!dirIsNeg[1])
+    {
+        // std::cout << "swap y" << std::endl;
+        std::swap(tyEnter, tyExit);
+    }
+    if(!dirIsNeg[2])
+    {
+        // std::cout << "swap z" << std::endl;
+        std::swap(tzEnter, tzExit);
+    }
     // std::cout << __FUNCTION__ << std::endl;
     // std::cout << txEnter << ", " << txExit << std::endl;
     // std::cout << tyEnter << ", " << tyExit << std::endl;
     // std::cout << tzEnter << ", " << tzExit << std::endl;
 
     float t_enter = std::max(txEnter, std::max(tyEnter, tzEnter));
-    float t_exit = std::min(txEnter, std::min(tyEnter, tzEnter));
+    float t_exit = std::min(txExit, std::min(tyExit, tzExit));
     // std::cout << t_enter << ", " << t_exit << std::endl;
 
 
-    return (t_enter < t_exit && t_exit >= 0);
+    return (t_enter < t_exit && t_exit > std::numeric_limits<float>::min());
 }
 
 inline Bounds3 Union(const Bounds3& b1, const Bounds3& b2)
