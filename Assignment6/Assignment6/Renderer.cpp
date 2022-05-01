@@ -35,9 +35,12 @@ void Renderer::Render(const Scene& scene)
             // *scale*, and x (horizontal) variable with the *imageAspectRatio*
 
             // Don't forget to normalize this direction!
-
+            Vector3f dir = Vector3f(x, y, -1);
+            dir = normalize(dir);
+            // std::cout << "vector size:" << framebuffer.size() << ", w*h:" << scene.width * scene.height << ", m:" << m << std::endl;
+            framebuffer[m++] = scene.castRay(Ray(eye_pos, dir), 0.0);//castRay(eye_pos, dir, scene, 0);
         }
-        UpdateProgress(j / (float)scene.height);
+        //UpdateProgress(j / (float)scene.height);
     }
     UpdateProgress(1.f);
 

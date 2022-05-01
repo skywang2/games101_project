@@ -55,13 +55,15 @@ Vector3f Scene::castRay(const Ray &ray, int depth) const
     if (depth > this->maxDepth) {
         return Vector3f(0.0,0.0,0.0);
     }
-    Intersection intersection = Scene::intersect(ray);
+    // std::cout << "before castRay" << std::endl;
+    Intersection intersection = Scene::intersect(ray);//1
     Material *m = intersection.m;
-    Object *hitObject = intersection.obj;
+    Object *hitObject = intersection.obj;//2
     Vector3f hitColor = this->backgroundColor;
 //    float tnear = kInfinity;
     Vector2f uv;
     uint32_t index = 0;
+    // std::cout << "intersect:" << intersection.happened << std::endl;
     if(intersection.happened) {
 
         Vector3f hitPoint = intersection.coords;

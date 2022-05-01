@@ -8,6 +8,7 @@
 #include "Triangle.hpp"
 #include <cassert>
 #include <array>
+#include <iostream>
 
 bool rayTriangleIntersect(const Vector3f& v0, const Vector3f& v1,
                           const Vector3f& v2, const Vector3f& orig,
@@ -232,9 +233,16 @@ inline Intersection Triangle::getIntersection(Ray ray)
     t_tmp = dotProduct(e2, qvec) * det_inv;
 
     // TODO find ray triangle intersection
-
-
-
+    //std::cout << "11111" << std::endl;
+    if(0 <= t_tmp && 0 <= u && 0 <= v && EPSILON <= (1.0 - u - v))
+    {
+        inter.happened = true;
+        inter.coords = ray(t_tmp);//(1.0 - u - v) * v0 + u * v1 + v * v2;
+        inter.normal = this->normal;
+        inter.distance = dotProduct(t_tmp, t_tmp);//sqrt(dotProduct(ray(t_tmp), ray(t_tmp)));
+        inter.obj = this;
+        inter.m = this->m;
+    }
 
     return inter;
 }
