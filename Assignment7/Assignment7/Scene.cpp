@@ -19,7 +19,7 @@ void Scene::sampleLight(Intersection &pos, float &pdf) const
 {
     float emit_area_sum = 0;
     for (uint32_t k = 0; k < objects.size(); ++k) {
-        if (objects[k]->hasEmit()){
+        if (objects[k]->hasEmit()){//if object can emit light
             emit_area_sum += objects[k]->getArea();
         }
     }
@@ -61,4 +61,31 @@ bool Scene::trace(
 Vector3f Scene::castRay(const Ray &ray, int depth) const
 {
     // TO DO Implement Path Tracing Algorithm here
+    if (depth > this->maxDepth) {
+        return Vector3f(0.0,0.0,0.0);
+    }
+
+    Intersection intersection = Scene::intersect(ray);
+    if(intersection.happened) {
+        return shade(intersection, ray);
+    }
+}
+
+Vector3f Scene::shade(Intersection& p, const Ray& wo)
+{
+    //1.a ray hit the sence
+    //auto material = inter.m;
+    Intersection inter;
+    float pdf_light = 0.f;
+    sampleLight(inter, pdf_light/*material->pdf(Vector3f(), wo.direction, p.normal)*/);
+    Vector3f x = inter.coords;//a ray from p to x, x is hit light point
+    Vector3f ws = p.coords - x;//from x to p
+    Vector3f N = p.normal.normalized();
+    Vector3f NN = inter.normal.normalized();
+    Intersection pTox = Scene::intersect(Ray(p.coords, -ws));
+
+    if(pTox.obj == inter.obj)
+    {
+        
+    }
 }
