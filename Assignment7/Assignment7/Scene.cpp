@@ -69,23 +69,32 @@ Vector3f Scene::castRay(const Ray &ray, int depth) const
     if(intersection.happened) {
         return shade(intersection, ray);
     }
+
+    return Vector3f();
 }
 
-Vector3f Scene::shade(Intersection& p, const Ray& wo)
+Vector3f Scene::shade(Intersection& p, const Ray& wo) const
 {
     //1.a ray hit the sence
-    //auto material = inter.m;
+    Vector3f L_dir;
     Intersection inter;
     float pdf_light = 0.f;
-    sampleLight(inter, pdf_light/*material->pdf(Vector3f(), wo.direction, p.normal)*/);
+    sampleLight(inter, pdf_light);
+
+    auto material = p.m;
     Vector3f x = inter.coords;//a ray from p to x, x is hit light point
     Vector3f ws = p.coords - x;//from x to p
     Vector3f N = p.normal.normalized();
     Vector3f NN = inter.normal.normalized();
     Intersection pTox = Scene::intersect(Ray(p.coords, -ws));
 
-    if(pTox.obj == inter.obj)
-    {
-        
+    if(pTox.obj == inter.obj) {
+        L_dir = inter.emit * material->eval(wo.direction, ws, N) * \
+            dotProduct(ws, N) * dotProduct(ws, NN) \
+            / ws.norm() / pdf_light;
     }
+
+    Vector3f L_indir;
+
+    return L_dir + L_indir;
 }
