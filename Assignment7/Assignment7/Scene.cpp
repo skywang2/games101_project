@@ -81,7 +81,6 @@ Vector3f Scene::shade(Intersection& p, const Ray& wo) const
     float pdf_light = 0.f;
     sampleLight(inter, pdf_light);
 
-    auto material = p.m;
     Vector3f x = inter.coords;//a ray from p to x, x is hit light point
     Vector3f ws = p.coords - x;//from x to p
     Vector3f N = p.normal.normalized();
@@ -89,12 +88,29 @@ Vector3f Scene::shade(Intersection& p, const Ray& wo) const
     Intersection pTox = Scene::intersect(Ray(p.coords, -ws));
 
     if(pTox.obj == inter.obj) {
-        L_dir = inter.emit * material->eval(wo.direction, ws, N) * \
-            dotProduct(ws, N) * dotProduct(ws, NN) \
+        L_dir = inter.emit * p.m->eval(wo.direction, ws, N) \
+            * dotProduct(ws, N) * dotProduct(ws, NN) \
             / ws.norm() / pdf_light;
     }
 
     Vector3f L_indir;
+    if(get_random_float() < RussianRoulette) {
+        Vector3f wi;
+        Object* obj;
+        float tNear = 0.f;
+        uint32_t hitIndex;
+
+        //sample a light from p
+        wi = p.m->sample(wi, N);
+        //trace a ray from p
+        //bool isHit = trace(Ray(p.coords, wi), objects, tNear, hitIndex, &obj);
+        Intersection q = Scene::intersect(Ray(p.coords, wi));
+        if(q.happened && !q.obj->hasEmit()) {
+            L_indir = shade(q, Ray(p.coords, wi)) * q.m->eval(wo.direction, wi, N) \
+                * dotProduct(wi, N) / 1/(2*M_PI) / RussianRoulette;
+        }
+
+    }
 
     return L_dir + L_indir;
 }
