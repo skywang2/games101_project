@@ -61,7 +61,8 @@ Vector3f Scene::castRay(const Ray &ray, int depth) const
 {
     Intersection inter = Scene::intersect(ray);
 
-    if(inter.happened) {
+    if(inter.happened)
+    {
         if(inter.m->hasEmission())//ray from light
         {
             if(depth == 0) 
@@ -70,11 +71,42 @@ Vector3f Scene::castRay(const Ray &ray, int depth) const
                 return Vector3f();
         }
 
-        Vector3f L_dir, L_indir;
+        Vector3f L_dir = 0.f, L_indir = 0.f;
+
         //sample a ray from light, get hit point on light surface.
         Intersection L_inter;
         float pdf_light = 0.f;
         sampleLight(L_inter, pdf_light);
+        Vector3f x = L_inter.coords;//a ray from p to x, x is hit light point
+        Vector3f ws = x - inter.coords;//from p to x
+        Vector3f N = inter.normal.normalized();//normal of p
+        Vector3f NN = L_inter.normal.normalized();//normal of L_inter
+
+        Intersection pTox = Scene::intersect(Ray(inter.coords, ws));
+        if(pTox.obj == L_inter.obj)
+        {
+            L_dir = L_inter.emit * inter.m->eval(ws, ray.direction, N) \
+                * dotProduct(ws, N) * dotProduct(ws, NN) \
+                / dotProduct(ws, ws) / pdf_light;
+        }
+
+        if(get_random_float() < RussianRoulette)
+        {
+            Vector3f wi;
+            Object* obj;
+            uint32_t hitIndex;
+
+            //sample a ray from p
+            wi = inter.m->sample(Vector3f(), N);
+            //trace a ray from p
+            Intersection pToq = Scene::intersect(Ray(inter.coords, wi));
+            if(pToq.happened && !pToq.obj->hasEmit())
+            {
+                L_indir = castRay(Ray(inter.coords, wi), depth + 1) * pToq.m->eval(wi, ray.direction, N) \
+                    * dotProduct(wi, N) / pToq.m->pdf(wi, ray.direction, N) / RussianRoulette;
+            }
+
+        }
 
         return L_dir + L_indir;
     }
