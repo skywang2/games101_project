@@ -57,7 +57,33 @@ bool Scene::trace(
     return (*hitObject != nullptr);
 }
 
+Vector3f Scene::castRay(const Ray &ray, int depth) const
+{
+    Intersection inter = Scene::intersect(ray);
+
+    if(inter.happened) {
+        if(inter.m->hasEmission())//ray from light
+        {
+            if(depth == 0) 
+                return inter.m->getEmission();
+            else
+                return Vector3f();
+        }
+
+        Vector3f L_dir, L_indir;
+        //sample a ray from light, get hit point on light surface.
+        Intersection L_inter;
+        float pdf_light = 0.f;
+        sampleLight(L_inter, pdf_light);
+
+        return L_dir + L_indir;
+    }
+
+    return Vector3f();
+}
+
 // Implementation of Path Tracing
+/*
 Vector3f Scene::castRay(const Ray &ray, int depth) const
 {
     // TO DO Implement Path Tracing Algorithm here
@@ -72,42 +98,41 @@ Vector3f Scene::castRay(const Ray &ray, int depth) const
 
     return Vector3f();
 }
+*/
 
 Vector3f Scene::shade(Intersection& p, const Ray& wo) const
 {
-    //1.a ray hit the sence
+    //sample a ray from light, get hit point on light surface.
     Vector3f L_dir;
-    Intersection inter;
+    Intersection L_inter;
     float pdf_light = 0.f;
-    sampleLight(inter, pdf_light);
+    sampleLight(L_inter, pdf_light);
 
-    Vector3f x = inter.coords;//a ray from p to x, x is hit light point
-    Vector3f ws = p.coords - x;//from x to p
-    Vector3f N = p.normal.normalized();
-    Vector3f NN = inter.normal.normalized();
-    Intersection pTox = Scene::intersect(Ray(p.coords, -ws));
+    Vector3f x = L_inter.coords;//a ray from p to x, x is hit light point
+    Vector3f ws = x - p.coords;//from p to x
+    Vector3f N = p.normal.normalized();//normal of p
+    Vector3f NN = L_inter.normal.normalized();//normal of L_inter
+    Intersection pTox = Scene::intersect(Ray(p.coords, ws));
 
-    if(pTox.obj == inter.obj) {
-        L_dir = inter.emit * p.m->eval(wo.direction, ws, N) \
+    if(pTox.obj == L_inter.obj) {
+        L_dir = L_inter.emit * p.m->eval(ws, wo.direction, N)/** p.m->eval(wo.direction, ws, N)*/ \
             * dotProduct(ws, N) * dotProduct(ws, NN) \
-            / ws.norm() / pdf_light;
+            / dotProduct(ws, ws) / pdf_light;
     }
 
     Vector3f L_indir;
     if(get_random_float() < RussianRoulette) {
         Vector3f wi;
         Object* obj;
-        float tNear = 0.f;
         uint32_t hitIndex;
 
-        //sample a light from p
-        wi = p.m->sample(wi, N);
+        //sample a ray from p
+        wi = p.m->sample(Vector3f(), N);
         //trace a ray from p
-        //bool isHit = trace(Ray(p.coords, wi), objects, tNear, hitIndex, &obj);
-        Intersection q = Scene::intersect(Ray(p.coords, wi));
-        if(q.happened && !q.obj->hasEmit()) {
-            L_indir = shade(q, Ray(p.coords, wi)) * q.m->eval(wo.direction, wi, N) \
-                * dotProduct(wi, N) / 1/(2*M_PI) / RussianRoulette;
+        Intersection pToq = Scene::intersect(Ray(p.coords, wi));
+        if(pToq.happened && !pToq.obj->hasEmit()) {
+            L_indir = shade(pToq, Ray(p.coords, wi)) * pToq.m->eval(wi, wo.direction, N)/** pToq.m->eval(wo.direction, wi, N)*/ \
+                * dotProduct(wi, N) / pToq.m->pdf(wi, wo.direction, N) / RussianRoulette;
         }
 
     }
