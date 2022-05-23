@@ -113,7 +113,7 @@ Intersection BVHAccel::getIntersection(BVHBuildNode* node, const Ray& ray) const
     {
         return Intersection();
     }
-    if(node->left && node->right)
+    if(node->left != nullptr && node->right != nullptr)
     {
         Intersection inter_l = BVHAccel::getIntersection(node->left, ray);
         Intersection inter_r = BVHAccel::getIntersection(node->right, ray);
