@@ -57,6 +57,7 @@ bool Scene::trace(
     return (*hitObject != nullptr);
 }
 
+/*
 Vector3f Scene::castRay(const Ray &ray, int depth) const
 {
     Intersection inter = Scene::intersect(ray);
@@ -66,8 +67,8 @@ Vector3f Scene::castRay(const Ray &ray, int depth) const
         // std::cout << "happened" << std::endl;
         if(inter.m->hasEmission())//ray from light
         {
-            static int count = 0;
-            std::cout << "happened && emission, " << count++ << ", depth" << depth << std::endl;
+            // static int count = 0;
+            // std::cout << "happened && emission, " << count++ << ", depth" << depth << std::endl;
             if(depth == 0) 
             {
                 // auto g = inter.m->getEmission();
@@ -116,10 +117,9 @@ Vector3f Scene::castRay(const Ray &ray, int depth) const
     }
 
     return Vector3f();
-}
+}*/
 
 // Implementation of Path Tracing
-/*
 Vector3f Scene::castRay(const Ray &ray, int depth) const
 {
     // TO DO Implement Path Tracing Algorithm here
@@ -129,12 +129,19 @@ Vector3f Scene::castRay(const Ray &ray, int depth) const
 
     Intersection intersection = Scene::intersect(ray);
     if(intersection.happened) {
+        if(intersection.m->hasEmission())//ray from light
+        {
+            if(depth == 0) 
+                return intersection.m->getEmission();
+            else
+                return Vector3f();
+        }
+
         return shade(intersection, ray);
     }
 
     return Vector3f();
 }
-*/
 
 Vector3f Scene::shade(Intersection& p, const Ray& wo) const
 {
