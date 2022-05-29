@@ -10,7 +10,7 @@ extern const float  EPSILON;
 const float kInfinity = std::numeric_limits<float>::max();
 
 inline float clamp(const float &lo, const float &hi, const float &v)
-{ return std::max(lo, std::min(hi, v)); }
+{ return std::max(lo, std::min(hi, v)); }//qv lo~hi fan wei nei de zhi
 
 inline  bool solveQuadratic(const float &a, const float &b, const float &c, float &x0, float &x1)
 {

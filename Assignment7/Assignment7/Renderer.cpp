@@ -3,8 +3,10 @@
 //
 
 #include <fstream>
+#include <iostream>
 #include "Scene.hpp"
 #include "Renderer.hpp"
+using namespace std;
 
 
 inline float deg2rad(const float& deg) { return deg * M_PI / 180.0; }
@@ -23,7 +25,12 @@ void Renderer::Render(const Scene& scene)
     Vector3f eye_pos(278, 273, -800);
     int m = 0;
 
+    for(auto& obj : scene.objects) {
+        if(obj->hasEmit()) cout << obj << endl;
+    }
+
     // change the spp value to change sample ammount
+    std::fstream frameFile("framebuffer.txt", std::fstream::out);
     int spp = 1;
     std::cout << "SPP: " << spp << "\n";
     for (uint32_t j = 0; j < scene.height; ++j) {
@@ -35,13 +42,16 @@ void Renderer::Render(const Scene& scene)
 
             Vector3f dir = normalize(Vector3f(-x, y, 1));
             for (int k = 0; k < spp; k++){
-                framebuffer[m] += scene.castRay(Ray(eye_pos, dir), 0) / spp;  
+                framebuffer[m] += scene.castRay(Ray(eye_pos, dir), 0) / spp; 
+                // if(frameFile.is_open()) frameFile << framebuffer[m] << std::endl; 
             }
             m++;
         }
         UpdateProgress(j / (float)scene.height);
+        frameFile << flush;
     }
     UpdateProgress(1.f);
+    if(frameFile.is_open()) frameFile.close();
 
     // save framebuffer to file
     FILE* fp = fopen("binary.ppm", "wb");
