@@ -93,8 +93,8 @@ Vector3f Scene::castRay(const Ray &ray, int depth) const
 
     Ray light(objPos, ws);
     Intersection pTox = Scene::intersect(light);
-    //if(pTox.obj == L_inter.obj)
-    //if(pTox.happened /*&& (pTox.coords - lightPos).norm() < 1e-2*/)
+    // if(pTox.obj == L_inter.obj)
+    if(pTox.happened && (pTox.coords - lightPos).norm() < 1e-2)
     {
         Vector3f f_r = inter.m->eval(ray.direction, ws, N);
         L_dir = L_inter.emit * f_r \
@@ -124,20 +124,12 @@ Vector3f Scene::castRay(const Ray &ray, int depth) const
 {
     // TO DO Implement Path Tracing Algorithm here
     if (depth > this->maxDepth) {
-        return Vector3f(0.0,0.0,0.0);
+        return Vector3f(0.5, 0.5, 0.5);
     }
 
     Intersection intersection = Scene::intersect(ray);
     if(intersection.happened) {
-        if(intersection.m->hasEmission()) {//ray from light
-            cout << "intersect emission" << endl;
-            if(depth == 0) 
-                return intersection.m->getEmission();
-            else
-                return Vector3f();
-        } else {
-            return shade(intersection, ray);
-        }
+        return shade(intersection, ray);
     }
 
     return Vector3f();
@@ -157,9 +149,9 @@ Vector3f Scene::shade(Intersection& p, const Ray& wo) const
     Vector3f NN = L_inter.normal.normalized();//normal of L_inter
     Intersection pTox = Scene::intersect(Ray(p.coords, ws));
 
-    if(pTox.obj == L_inter.obj) {
+    if(pTox.happened && (pTox.coords - x).norm() < 1e-2) {
         L_dir = L_inter.emit * p.m->eval(wo.direction, ws, N) \
-            * dotProduct(ws, N) * dotProduct(ws, NN) \
+            * dotProduct(ws, N) * dotProduct(-ws, NN) \
             / dotProduct(ws, ws) / pdf_light;
     }
 
