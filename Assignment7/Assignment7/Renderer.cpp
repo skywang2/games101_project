@@ -4,6 +4,8 @@
 
 #include <fstream>
 #include <iostream>
+#include <vector>
+#include <thread>
 #include "Scene.hpp"
 #include "Renderer.hpp"
 using namespace std;
@@ -25,12 +27,13 @@ void Renderer::Render(const Scene& scene)
     Vector3f eye_pos(278, 273, -800);
     int m = 0;
 
-    for(auto& obj : scene.objects) {
-        if(obj->hasEmit()) cout << obj << endl;
-    }
+    // for(auto& obj : scene.objects) {
+    //     if(obj->hasEmit()) cout << obj << endl;
+    // }
 
     // change the spp value to change sample ammount
     std::fstream frameFile("framebuffer.txt", std::fstream::out);
+    /*
     int spp = 1;
     std::cout << "SPP: " << spp << "\n";
     for (uint32_t j = 0; j < scene.height; ++j) {
@@ -51,6 +54,25 @@ void Renderer::Render(const Scene& scene)
         frameFile << flush;
     }
     UpdateProgress(1.f);
+*/
+
+    //thread
+    vector<thread> threads;
+    const uint32_t rowNum = 8;
+    for (uint32_t j = 0; j < scene.height;) {
+        thread th = thread(&Renderer::ThreadRender, this, j, j + rowNum, ref(scene), ref(framebuffer), m);
+        j += rowNum;
+        m += rowNum * scene.width;
+        threads.push_back(move(th));
+    }
+
+    int count = 1;
+    for(auto& th : threads)
+    {
+        if(th.joinable()) th.join();
+        UpdateProgress(count++ / (float)threads.size());
+    }
+    UpdateProgress(1.f);
     if(frameFile.is_open()) frameFile.close();
 
     // save framebuffer to file
@@ -65,3 +87,27 @@ void Renderer::Render(const Scene& scene)
     }
     fclose(fp);    
 }
+
+void Renderer::ThreadRender(const int rowStart, const int rowEnd, const Scene& scene, std::vector<Vector3f>& framebuffer, int m)
+{
+    float scale = tan(deg2rad(scene.fov * 0.5));
+    float imageAspectRatio = scene.width / (float)scene.height;
+    Vector3f eye_pos(278, 273, -800);
+    int spp = 1;
+
+    for (uint32_t j = rowStart; (j < scene.height) && (j < rowEnd); ++j) {
+        for (uint32_t i = 0; i < scene.width; ++i) 
+        {
+            // generate primary ray direction
+            float x = (2 * (i + 0.5) / (float)scene.width - 1) * imageAspectRatio * scale;
+            float y = (1 - 2 * (j + 0.5) / (float)scene.height) * scale;
+            Vector3f dir = normalize(Vector3f(-x, y, 1));
+            for (int k = 0; k < spp; k++){
+                if(m > framebuffer.size()) return;
+                framebuffer[m] += scene.castRay(Ray(eye_pos, dir), 0) / spp; 
+            }
+            m++;
+        }
+    }
+}
+

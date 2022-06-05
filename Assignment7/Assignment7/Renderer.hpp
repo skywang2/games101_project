@@ -16,6 +16,7 @@ class Renderer
 {
 public:
     void Render(const Scene& scene);
+    void ThreadRender(const int rowStart, const int rowEnd, const Scene& scene, std::vector<Vector3f>& framebuffer, int m);
 
 private:
 };
