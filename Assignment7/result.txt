@@ -1,0 +1,13 @@
+2cores
+cost time:
+no Multi-Thread:169s
+16 rows in 1 thread:87s
+8 rows in 1 thread:84s
+
+8cores, 8 rows in 1 thread
+cost time:
+spp1:21s
+spp8:176s
+spp16:352s
+
+

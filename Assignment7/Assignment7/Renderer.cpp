@@ -93,7 +93,7 @@ void Renderer::ThreadRender(const int rowStart, const int rowEnd, const Scene& s
     float scale = tan(deg2rad(scene.fov * 0.5));
     float imageAspectRatio = scene.width / (float)scene.height;
     Vector3f eye_pos(278, 273, -800);
-    int spp = 1;
+    int spp = 16;
 
     for (uint32_t j = rowStart; (j < scene.height) && (j < rowEnd); ++j) {
         for (uint32_t i = 0; i < scene.width; ++i) 
