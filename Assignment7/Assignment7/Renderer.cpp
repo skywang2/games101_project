@@ -22,7 +22,7 @@ void Renderer::Render(const Scene& scene)
 {
     std::vector<Vector3f> framebuffer(scene.width * scene.height);
 
-    float scale = tan(deg2rad(scene.fov * 0.5));
+    float scale = tan(deg2rad(scene.fov * 0.5));//chui zhi fang xiang de FOV
     float imageAspectRatio = scene.width / (float)scene.height;
     Vector3f eye_pos(278, 273, -800);
     int m = 0;
@@ -93,13 +93,15 @@ void Renderer::ThreadRender(const int rowStart, const int rowEnd, const Scene& s
     float scale = tan(deg2rad(scene.fov * 0.5));
     float imageAspectRatio = scene.width / (float)scene.height;
     Vector3f eye_pos(278, 273, -800);
-    int spp = 16;
+    int spp = 1;
 
     for (uint32_t j = rowStart; (j < scene.height) && (j < rowEnd); ++j) {
         for (uint32_t i = 0; i < scene.width; ++i) 
         {
             // generate primary ray direction
+            //x from 0~1 => -1~1
             float x = (2 * (i + 0.5) / (float)scene.width - 1) * imageAspectRatio * scale;
+            //y from -1~0 => -1~1, tu xiang er wei zuo biao yuan dian zai zuo shang jiao, x xiang you y xiang xia
             float y = (1 - 2 * (j + 0.5) / (float)scene.height) * scale;
             Vector3f dir = normalize(Vector3f(-x, y, 1));
             for (int k = 0; k < spp; k++){
